@@ -2,9 +2,10 @@ import './App.css';
 import "bulma/css/bulma.css";
 import { useContext } from 'react';
 import {LotteryContext} from './context/LotteryContext';
+import image from './context/utils/logo192.png';
 function App() {
-  const {connectWallet,lotteryPot,lotteryPlayers,enterLottery,error,success,pickWinner,currentAccount,lotteryHistory,lotteryId,loading} = useContext(LotteryContext);
-  const owner = "0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266" 
+  const {connectWallet,lotteryPot,lotteryPlayers,enterLottery,error,success,pickWinner,currentAccount,lotteryHistory,lotteryId,loading,sendToWinner,result} = useContext(LotteryContext);
+  const owner = "0xd7A268E4C13487A15a5ded637B3e9FD6b9F81e99" 
   return (
     <div className="App">
     
@@ -12,7 +13,11 @@ function App() {
        <nav className='navbar mt-4 mb-4'>
          <div className='container'>
            <div className='navbar-brand'>
-             <h1>Welcome To LotteryV2 </h1>
+            <div>
+              {/* <img src={require('../public/logo192.png').default} /> */}
+              <img src={image} height={60} width={80} />
+            </div>
+             <h1 > Welcome To LotteryV2 </h1>
            </div>
             
            <div className='navbar-end'>
@@ -38,11 +43,21 @@ function App() {
             ?
             <section className='mt-6'>
             <p><b>Admin only : </b>OpenLottery</p>
-            <button className='button is-primary is-large is-light mt-3' onClick={pickWinner} disabled={lotteryPlayers.length == 0 || loading}>OpenLottery</button>
+            <button className='button is-primary is-large is-light mt-3' onClick={pickWinner} disabled={lotteryPlayers.length <10 || loading}> OpenLottery </button>
+          </section >
+          :
+          ""
+          }
+       {currentAccount?.toLowerCase() == owner.toLowerCase()
+            ?
+            <section className = 'mt-6'>
+            <p><b>Admin only : </b>sendToWinner</p>
+           <button className='button is-primary is-large is-light mt-3' onClick={sendToWinner} disabled={result == 0 || loading}> sendAmountToWinner</button>
           </section>
           :
           ""
           }
+         
          
           <section>
                   <div className="container has-text-danger mt-6">
@@ -60,6 +75,9 @@ function App() {
                     })}
                   </div>
                 </section>
+           </div>
+           <div className='column is-two-third'>
+            <img src={image}/>
            </div>
            <div className='column is-one-third'>
             <section className='mt-5'>
@@ -120,7 +138,7 @@ function App() {
        </div>
      </div>
      <footer className='footer'>
-    <p>&copy; 2022 Raur Enterprice</p>
+    <p>&copy; 2022 Mohsin Blockchain Dveloper</p>
      </footer>
     </div>
   );

@@ -46,6 +46,7 @@ contract lotteryV2 is VRFConsumerBaseV2 {
     }
 
     function openLottery() public returns (uint256 requestId) {
+        require(result == 0,"Please wait for result");
         require(participants.length >= 10, "please wait for participant");
         requestId = COORDINATOR.requestRandomWords(
             s_keyHash,
@@ -65,10 +66,9 @@ contract lotteryV2 is VRFConsumerBaseV2 {
         uint256 requestId,
         uint256[] memory randomWords
     ) internal override {
-        uint256 d20Value = (randomWords[0] % 10);
+        uint256 d20Value = (randomWords[0] % 10)+1;
         result = d20Value;
         results[request[requestId]] = d20Value;
-        sendToWinner();
         emit DiceLanded(requestId, d20Value);
     }
 
@@ -78,21 +78,17 @@ contract lotteryV2 is VRFConsumerBaseV2 {
         participants.push(payable(msg.sender));
     }
 
-    function sendToWinner() internal {
+    function sendToWinner() public onlyOwner {
         require(result != 0, "please Wait for result");
-        if (participants[result] != address(0)) {
-            (bool success, ) = participants[result].call{
+        (bool success,) = participants[result].call{
                 value: address(this).balance
             }("");
             if (!success) {
-                revert("transaction fail");
+                revert("transaction fails ");
             }
             result = 0;
             Lottery++;
             delete participants;
-        } else {
-            revert("address is zero");
-        }
     }
 
     function getBalance() public view returns(uint256){

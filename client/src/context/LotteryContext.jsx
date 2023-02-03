@@ -24,6 +24,8 @@ export const LotteryProvider = ({ children }) => {
     const [error, setError] = useState('');
     const [success, setSuccess] = useState('');
     const [loading, setLoading] = useState(false);
+    const [result,setresult] = useState();
+
 
 
     useEffect(() => {
@@ -40,6 +42,8 @@ export const LotteryProvider = ({ children }) => {
         if (getLotteryContract()) getPot();
         if (getLotteryContract()) getPlayers();
         if (getLotteryContract()) getLotteryId();
+        if (getLotteryContract()) getResult();
+
     }
 
 
@@ -153,10 +157,35 @@ export const LotteryProvider = ({ children }) => {
         historyObj.address = winnerAddress;
         setLotteryHistory(lotteryHistory => [...lotteryHistory,historyObj]);
     }
+    
 
+
+    const sendToWinner =  async() => {
+
+        setError('')
+        setSuccess('')
+         try{
+         setLoading(true)
+            const res =  await getLotteryContract().sendToWinner({
+                 from: currentAccount,
+                 gasLimit: 3000000,
+                 gasPrice: null
+             })
+             await res.wait()
+         setLoading(false)
+         }catch(err){
+         setLoading(false)
+             setError(err.message);
+         }
+     }
+
+     const getResult = async () => {
+        const res = await getLotteryContract().result();
+        setresult(res);
+    }
 
     return (
-        <LotteryContext.Provider value={{ connectWallet, currentAccount, lotteryPot, lotteryPlayers, enterLottery,error,success,pickWinner,lotteryHistory,lotteryId,loading }}>
+        <LotteryContext.Provider value={{ connectWallet, currentAccount, lotteryPot, lotteryPlayers, enterLottery,error,success,pickWinner,lotteryHistory,lotteryId,loading,sendToWinner,result}}>
             {children}
         </LotteryContext.Provider>
     )

@@ -229,7 +229,14 @@ export const lotteryAbi = [
     ],
     "stateMutability": "view",
     "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "sendToWinner",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
   }
 ]
-export const contractAddress = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0";
+export const contractAddress = "0x4664405A72AF6Cd3bc1F31F156aD8b895BaF0477";
 

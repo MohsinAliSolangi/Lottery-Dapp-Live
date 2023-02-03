@@ -1,27 +1,34 @@
-require("@nomicfoundation/hardhat-toolbox");
+require("@nomiclabs/hardhat-waffle");
+require('dotenv').config({path: __dirname+'/.env'})
+require("@nomiclabs/hardhat-etherscan");
 
-
-// Go to https://www.alchemyapi.io, sign up, create
-// a new App in its dashboard, and replace "KEY" with its key
-const ALCHEMY_API_KEY = process.env.ALCHEMY_API_KEY;
-
-// Replace this private key with your Goerli account private key
-// To export your private key from Metamask, open Metamask and
-// go to Account Details > Export Private Key
-// Beware: NEVER put real Ether into testing accounts
-const GOERLI_PRIVATE_KEY = process.env.GOERLI_PRIVATE_KEY;
 
 module.exports = {
-  solidity: "0.8.9",
+  defaultNetwork: "goerli",
   networks: {
+    hardhat: {
+    },
     goerli: {
-      url: ALCHEMY_API_KEY,
-      accounts: [GOERLI_PRIVATE_KEY]
+      url: process.env.ALCHEMY_API_KEY,
+      accounts: [process.env.GOERLI_PRIVATE_KEY]
     }
+  },
+  solidity: {
+    version: "0.8.14",
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 200
+      }
+    }
+  },
+  paths: {
+    sources: "./contracts",
+    tests: "./test",
+    cache: "./cache",
+    artifacts: "./artifacts"
+  },
+  mocha: {
+    timeout: 40000
   }
-};
-
-/** @type import('hardhat/config').HardhatUserConfig */
-module.exports = {
-  solidity: "0.8.17",
-};
+}

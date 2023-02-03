@@ -9,7 +9,7 @@ const hre = require("hardhat");
 async function main() {
 
   const lotteryV2 = await hre.ethers.getContractFactory("lotteryV2");
-  const LotteryV2 = await lotteryV2.deploy(934);
+  const LotteryV2 = await lotteryV2.deploy(9351);
   await LotteryV2.deployed();
 
   console.log(
