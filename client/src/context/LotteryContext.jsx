@@ -69,7 +69,7 @@ export const LotteryProvider = ({ children }) => {
                 method: "wallet_switchEthereumChain",
                 params: [
                   {
-                    chainId: process.env.CHAIN_ID, // Replace with your desired chain ID
+                    chainId: process.env.REACT_APP_CHAIN_ID, // Replace with your desired chain ID
                   },
                 ],
               });
