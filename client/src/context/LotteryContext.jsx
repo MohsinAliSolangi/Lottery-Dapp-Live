@@ -1,6 +1,5 @@
 import { ethers } from "ethers";
 import React, { useState, useEffect, createContext } from "react";
-
 import { lotteryAbi, contractAddress } from "./utils/constants";
 
 export const LotteryContext = createContext();
@@ -8,14 +7,22 @@ export const LotteryContext = createContext();
 const { ethereum } = window;
 
 export const getLotteryContract = () => {
-    const provider = new ethers.providers.Web3Provider(ethereum);
-    const signer = provider.getSigner();
-    const LotteryContract = new ethers.Contract(contractAddress, lotteryAbi, signer);
-    return LotteryContract;
-
+    if(typeof window.ethereum !== "undefined"){
+        const provider = new ethers.providers.Web3Provider(ethereum);
+        const signer = provider.getSigner();
+        const LotteryContract = new ethers.Contract(contractAddress, lotteryAbi, signer);
+        return LotteryContract;
+    }
+    else {
+        const providers = process.env.REACT_APP_RPCADDRESS;
+        const provider = new ethers.providers.JsonRpcProvider(providers);
+        const LotteryContract = new ethers.Contract(contractAddress, lotteryAbi, provider);
+        return LotteryContract;
+    }
 }
 
 export const LotteryProvider = ({ children }) => {
+
     const [currentAccount, setCurrentAccount] = useState();
     const [lotteryPot, setLotteryPot] = useState();
     const [lotteryPlayers, setLotteryPlayers] = useState([]);
@@ -29,60 +36,117 @@ export const LotteryProvider = ({ children }) => {
 
 
     useEffect(() => {
-        checkWalletIsConnected();
+        checkIsWalletConnected();
         updateState();
+        getLotteryContract()
     }, [])
 
-    ethereum.on("accountsChanged", async(account) => {
-        setCurrentAccount(account[0]);
-    })
 
 
     const updateState = () => {
-        if (getLotteryContract()) getPot();
-        if (getLotteryContract()) getPlayers();
-        if (getLotteryContract()) getLotteryId();
-        if (getLotteryContract()) getResult();
-
-    }
-
-
-    const checkWalletIsConnected = async () => {
-        try {
-            if (!ethereum) return alert("Please Install Metamask");
-            const accounts = await ethereum.request({ method: "eth_accounts" });
-            if (accounts.length) {
-                setCurrentAccount(accounts[0]);
-
-            } else {
-                console.log("No account found")
-            }
-      
-        } catch (err) {
-            setError(err.message);
-            throw new Error("No ethereum object.")
-        }
+        // if (loading){
+            console.log("this is useEffect")
+            getPot();
+            getPlayers();
+            getLotteryId();
+            getResult();
+        // } 
     }
 
 
     const connectWallet = async () => {
-        setError("")
-        try {
-            setLoading(true)
-            if (!ethereum) return alert("Please Install Metamask");
-            const accounts = await ethereum.request({ method: "eth_requestAccounts" })
-            setCurrentAccount(accounts[0]);
-            window.location.reload();
-            setLoading(false)
-
-        } 
-        
-        catch (err) {
-            setLoading(false)
-            setError(err.message);
-            throw new Error("No ethereum object.")
+        const isMobile =
+          /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(
+            navigator.userAgent
+          );
+    
+        // Check if MetaMask is installed
+        if (typeof window.ethereum !== "undefined") {
+          try {
+            // Check if the wallet is already connected
+            if (!isMobile && !loading) {
+              await ethereum.request({
+                method: "wallet_switchEthereumChain",
+                params: [
+                  {
+                    chainId: process.env.CHAIN_ID, // Replace with your desired chain ID
+                  },
+                ],
+              });
+    
+              const accounts = await window.ethereum.request({
+                method: "eth_requestAccounts",
+              });
+    
+              setCurrentAccount(accounts[0]);
+              setLoading(true);
+            } else if (isMobile) {
+              const accounts = await window.ethereum.request({
+                method: "eth_requestAccounts",
+              });
+              setCurrentAccount(accounts[0]);
+              setLoading(true);
+            }
+          } catch (err) {
+            setLoading(false);
+            // toast.error(err.message);
+            console.error(err.message);
+          }
+        } else {
+          if (isMobile) {
+            // Metamask app is not installed, redirect to installation page
+            window.open(
+              "https://metamask.app.link/dapp/https://staking-dapp-project.vercel.app/"
+            );
+            return;
+          } else {
+            // if no window.ethereum and no window.web3, then MetaMask or Trust Wallet is not installed
+            alert(
+              "MetaMask or Trust Wallet is not installed. Please consider installing one of them."
+            );
+            return;
+          }
         }
-    }
+      };
+    
+      const checkIsWalletConnected = async () => {
+        try {
+            
+          window.ethereum.on("accountsChanged", async function (accounts) {
+            setCurrentAccount(accounts[0]);
+            setLoading(true);
+          });
+          window.ethereum.on("chainChanged", async (chainId) => {
+            if (chainId != process.env.REACT_APP_CHAIN_ID) {
+              await ethereum.request({
+                method: "wallet_switchEthereumChain",
+                params: [
+                  {
+                    // chainId: "0x5" //Goerli
+                    // chainId: "0x89", //PolygonMainnet
+                    // chainId: "0xaa36a7", //sepolia
+                    // chainId: "0x1", //Miannet
+                    chainId: process.env.REACT_APP_CHAIN_ID, //localHost TODO
+                    // chainId:"0x13881" //mumbai
+                    // chainId:"0x61"//bnb
+                  },
+                ],
+              });
+            }
+          });
+          const accounts = await ethereum.request({ method: "eth_accounts" });
+          if (accounts.length) {
+            setCurrentAccount(accounts[0]);
+            setLoading(true);
+          } else {
+            console.log("No account Found");
+            setLoading(false);
+          }
+        } catch (err) {
+          console.log(err.message);
+          setLoading(false);
+        }
+      };
 
 
     const getPot = async () => {
@@ -119,9 +183,9 @@ export const LotteryProvider = ({ children }) => {
 
     }
 
-    const reload = () => {
-        window.location.reload()
-    }
+    // const reload = () => {
+    //     window.location.reload()
+    // }
 
     const pickWinner =  async() => {
 
@@ -158,8 +222,6 @@ export const LotteryProvider = ({ children }) => {
         setLotteryHistory(lotteryHistory => [...lotteryHistory,historyObj]);
     }
     
-
-
     const sendToWinner =  async() => {
 
         setError('')
